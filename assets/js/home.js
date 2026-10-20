@@ -81,98 +81,145 @@
     if (GWC.lenis) GWC.lenis.on("scroll", ({ velocity }) => { if (!tw.paused()) gsap.to(tw, { timeScale: 1 + Math.min(6, Math.abs(velocity) * .35) * Math.sign(velocity || 1), duration: .25, overwrite: true }); });
   }
 
-  /* ---------- Six matieres ---------- */
+  /* ---------- Six matieres : fond, textes, photo, couleurs et selecteur lies au meme defilement ---------- */
   const secM = $("#matieres");
-  const M = G.matieres;
+  const M = G.matieres, N = M.length;
   const txts = $$(".matiere-txt", secM), photos = $$(".plaque-photo", secM), rails = $$(".matieres__rail button", secM), replis = $$(".repli", secM);
-  const canvasM = $(".matieres__fond canvas", secM);
-  let actif = 0, gl = null, glPret = false;
+  const canvasM = $(".matieres__fond canvas", secM), voileC = $(".matieres__voile--clair", secM), voileS = $(".matieres__voile--sombre", secM);
+  const rail = $(".matieres__rail", secM), curseur = $(".rail__curseur", secM);
+  const anime = !calme && !!window.gsap;
+  const FEN = .28, DUR = .44; /* la transition occupe 44 % de l'intervalle entre deux matieres, le reste est au repos */
+  const CLAIR = "#24170F", SOMBRE = "#F6F2EB";
+  let actif = -1, gl = null, glPret = false, stM = null, tlM = null, vers = null;
+
   const chargerRepli = (k) => { const r = replis[k]; if (r && !r.dataset.ok) { r.style.backgroundImage = `url(${r.dataset.bg})`; r.dataset.ok = "1"; } };
-  const montrerRepli = (k) => { chargerRepli(k); replis.forEach((r, j) => r.classList.toggle("est-visible", j === k)); };
-  montrerRepli(0);
+  /* Fond : brulure WebGL quand elle est prete, sinon fondu entre les images nettes */
+  const fond = { k: 0 };
+  function majFond() {
+    const k = fond.k, i = Math.min(N - 1, Math.floor(k)), f = k - i;
+    chargerRepli(i); if (f > 0) chargerRepli(i + 1);
+    replis.forEach((r, j) => (r.style.opacity = j === i ? 1 : j === i + 1 ? f : 0));
+    if (gl && glPret) gl.set(k);
+  }
+  /* Etat accessible : uniquement la matiere la plus proche */
+  function etat(i) {
+    if (i === actif) return;
+    actif = i;
+    rails.forEach((b, k) => b.setAttribute("aria-current", k === i ? "true" : "false"));
+    txts.forEach((t, k) => { t.inert = k !== i; t.setAttribute("aria-hidden", k === i ? "false" : "true"); t.classList.toggle("est-active", k === i); });
+    photos.forEach((p, k) => p.setAttribute("aria-hidden", k === i ? "false" : "true"));
+    if (!anime) secM.classList.toggle("est-sombre", !!M[i].sombre);
+    const b = rails[i];
+    if (rail.scrollWidth > rail.clientWidth + 2) rail.scrollTo({ left: b.offsetLeft - (rail.clientWidth - b.offsetWidth) / 2, behavior: anime ? "smooth" : "auto" });
+  }
+  /* Cadre decoupe au laser autour de chaque photo */
+  const cadres = photos.map((fig) => ({ fig, svg: $("svg", fig), path: $("path", fig), etin: $(".etincelle", fig), img: $("img", fig), L: 1, o: 10, v: null }));
+  function laser(c, v) {
+    c.v = v;
+    c.path.style.strokeDashoffset = c.L * (1 - v);
+    const p = c.path.getPointAtLength(c.L * v);
+    c.etin.style.transform = `translate(${(p.x - c.o).toFixed(1)}px, ${(p.y - c.o).toFixed(1)}px)`;
+  }
+  function tracerCadres() {
+    cadres.forEach((c) => {
+      const w = c.fig.clientWidth, h = c.fig.clientHeight, r = 14, o = c.o;
+      if (!w) return;
+      c.svg.setAttribute("viewBox", `0 0 ${w + 2 * o} ${h + 2 * o}`);
+      c.path.setAttribute("d", `M${o + r} ${o} H${o + w - r} Q${o + w} ${o} ${o + w} ${o + r} V${o + h - r} Q${o + w} ${o + h} ${o + w - r} ${o + h} H${o + r} Q${o} ${o + h} ${o} ${o + h - r} V${o + r} Q${o} ${o} ${o + r} ${o} Z`);
+      c.L = c.path.getTotalLength(); c.path.style.strokeDasharray = c.L;
+      if (c.v != null) laser(c, c.v);
+    });
+  }
+  function montrerCalme(i) {
+    etat(i);
+    txts.forEach((t, k) => (t.style.opacity = k === i ? 1 : 0));
+    photos.forEach((p, k) => (p.style.opacity = k === i ? 1 : 0));
+    chargerRepli(i); replis.forEach((r, k) => r.classList.toggle("est-visible", k === i));
+  }
+
+  if (anime) {
+    secM.classList.add("matieres--anime");
+    tracerCadres();
+    const MASQUE_PLEIN = "inset(-25% -6% -30% -6%)", MASQUE_HAUT = "inset(-25% -6% 130% -6%)", MASQUE_BAS = "inset(130% -6% -30% -6%)";
+    const titres = txts.map((t) => $("h3", t)), paras = txts.map((t) => [...t.querySelectorAll("p")]);
+    titres.forEach((h, k) => gsap.set(h, { y: k ? 50 : 0, clipPath: k ? MASQUE_BAS : MASQUE_PLEIN }));
+    paras.forEach((e, k) => gsap.set(e, { opacity: k ? 0 : 1, y: k ? 22 : 0 }));
+    photos.forEach((p, k) => gsap.set(p, { opacity: k ? 0 : 1 }));
+    cadres.forEach((c, k) => { gsap.set(c.img, { clipPath: k ? "inset(0% 0% 100% 0% round 4px)" : "inset(0% 0% 0% 0% round 4px)" }); laser(c, k ? 0 : 1); });
+    gsap.set(secM, { "--encre-m": M[0].sombre ? SOMBRE : CLAIR });
+    gsap.set(voileS, { opacity: M[0].sombre ? 1 : 0 }); gsap.set(voileC, { opacity: M[0].sombre ? 0 : 1 });
+    majFond();
+    tlM = gsap.timeline({ paused: true, defaults: { ease: "none", immediateRender: false }, onUpdate: () => etat(Math.round(tlM.time())) });
+    for (let i = 0; i < N - 1; i++) {
+      const t0 = i + FEN, c = cadres[i + 1], px = { v: 0 };
+      tlM.fromTo(fond, { k: i }, { k: i + 1, duration: DUR, onUpdate: majFond }, t0)
+        /* le grand titre roule dans un masque ; les paragraphes se relaient sans se croiser */
+        .fromTo(titres[i], { y: 0, clipPath: MASQUE_PLEIN }, { y: -40, clipPath: MASQUE_HAUT, duration: .13, ease: "power2.in" }, t0 + .03)
+        .fromTo(titres[i + 1], { y: 50, clipPath: MASQUE_BAS }, { y: 0, clipPath: MASQUE_PLEIN, duration: .17, ease: "power3.out" }, t0 + .16)
+        .fromTo(paras[i], { y: 0, opacity: 1 }, { y: -16, opacity: 0, duration: .12, stagger: .02, ease: "power1.in" }, t0 + .04)
+        .fromTo(paras[i + 1], { y: 22, opacity: 0 }, { y: 0, opacity: 1, duration: .16, stagger: .03, ease: "power2.out" }, t0 + .2)
+        .fromTo(photos[i], { opacity: 1, scale: 1, rotation: 0 }, { opacity: 0, scale: .95, rotation: -2, duration: .22, ease: "power1.in" }, t0 + .08)
+        .fromTo(photos[i + 1], { opacity: 0, scale: 1, rotation: 0 }, { opacity: 1, duration: .02 }, t0 + .02)
+        .fromTo([c.path, c.etin], { opacity: 0 }, { opacity: 1, duration: .02 }, t0 + .02)
+        .fromTo(px, { v: 0 }, { v: 1, duration: .24, ease: "power1.inOut", onUpdate: () => laser(c, px.v) }, t0 + .02)
+        .fromTo(c.img, { clipPath: "inset(0% 0% 100% 0% round 4px)" }, { clipPath: "inset(0% 0% 0% 0% round 4px)", duration: .2, ease: "power2.inOut" }, t0 + .12)
+        .fromTo([c.path, c.etin], { opacity: 1 }, { opacity: 0, duration: .06 }, t0 + .29)
+        .fromTo(curseur, { x: () => rails[i].offsetLeft, width: () => rails[i].offsetWidth }, { x: () => rails[i + 1].offsetLeft, width: () => rails[i + 1].offsetWidth, duration: DUR, ease: "power2.inOut" }, t0);
+      if (!!M[i].sombre !== !!M[i + 1].sombre) {
+        const s0 = M[i].sombre ? 1 : 0, s1 = 1 - s0;
+        tlM.fromTo(voileS, { opacity: s0 }, { opacity: s1, duration: DUR * .7 }, t0 + DUR * .15)
+          .fromTo(voileC, { opacity: 1 - s0 }, { opacity: 1 - s1, duration: DUR * .7 }, t0 + DUR * .15)
+          .fromTo(secM, { "--encre-m": s0 ? SOMBRE : CLAIR }, { "--encre-m": s1 ? SOMBRE : CLAIR, duration: DUR * .5 }, t0 + DUR * .25);
+      }
+    }
+    tlM.set({}, {}, N - 1);
+    const placerCurseur = () => { const t = tlM.time(); tlM.invalidate(); tlM.time(0, true); tlM.time(t, true); if (t === 0) gsap.set(curseur, { x: rails[0].offsetLeft, width: rails[0].offsetWidth }); };
+    gsap.set(curseur, { x: rails[0].offsetLeft, width: rails[0].offsetWidth });
+    if (document.fonts) document.fonts.ready.then(placerCurseur);
+    GWC.surRedim(() => { tracerCadres(); placerCurseur(); });
+  } else montrerCalme(0);
+  etat(0);
+
   const preparerGL = () => {
-    if (gl || calme || preparerGL.fait) return;
+    if (gl || !anime || preparerGL.fait) return;
     preparerGL.fait = true;
     try {
       gl = new window.Matiere(canvasM, M.map((m) => `assets/img/grok/texture-${m.id}-${pin ? 1600 : 800}.webp`));
-      gl.pret.then(() => { glPret = true; secM.classList.add("matieres--gl"); });
+      gl.pret.then(() => { glPret = true; gl.set(fond.k); canvasM.classList.add("est-visible"); });
     } catch (e) { gl = null; canvasM.hidden = true; }
   };
-  if (pin) GWC.approche(secM, () => { M.forEach((_, k) => chargerRepli(k)); preparerGL(); }, "900px");
-  else { const rail = $(".matieres__rail", secM); ["pointerdown", "focusin"].forEach((t) => rail.addEventListener(t, preparerGL, { once: true })); }
-  /* Le canvas ne s'affiche que pendant la brulure ; au repos, l'image nette de la matiere prend le relais */
-  function bruler(a, b, k) {
-    if (gl && glPret && k > 0 && k < 1) {
-      gl.paire(a, b, k);
-      canvasM.classList.add("est-visible");
-      montrerRepli(k < .5 ? a : b);
-    } else {
-      canvasM.classList.remove("est-visible");
-      montrerRepli(k >= .5 ? b : a);
+  if (pin && anime) GWC.approche(secM, () => { M.forEach((_, k) => chargerRepli(k)); preparerGL(); }, "900px");
+  else ["pointerdown", "focusin"].forEach((t) => rail.addEventListener(t, preparerGL, { once: true }));
+
+  if (pin && anime && window.ScrollTrigger) {
+    stM = ScrollTrigger.create({ trigger: secM, start: "top top", end: () => "+=" + innerHeight * 4.6, pin: ".matieres__scene", animation: tlM, scrub: .45, anticipatePin: 1, invalidateOnRefresh: true });
+    ScrollTrigger.addEventListener("refreshInit", tracerCadres);
+    $("#matieres-aide").textContent = "Faites défiler pour changer de matière";
+    /* Si l'on s'arrete au milieu d'une brulure, elle se termine en douceur vers la matiere la plus proche */
+    if (GWC.lenis) {
+      let att;
+      GWC.lenis.on("scroll", () => {
+        clearTimeout(att);
+        att = setTimeout(() => {
+          if (!stM.isActive || window.__gwSansAimant) return;
+          const t = stM.progress * (N - 1), i = Math.floor(t), f = t - i;
+          if (f <= FEN + .015 || f >= FEN + DUR - .015) return;
+          const cible = i + (f < FEN + DUR / 2 ? FEN - .03 : FEN + DUR + .03);
+          GWC.lenis.scrollTo(stM.start + (stM.end - stM.start) * (cible / (N - 1)), { duration: .85, easing: (x) => 1 - Math.pow(1 - x, 3) });
+        }, 170);
+      });
     }
   }
-  function decouper(fig) {
-    const path = $("path", fig), svg = $("svg", fig), etin = $(".etincelle", fig), img = $("img", fig);
-    const w = fig.clientWidth, h = fig.clientHeight, r = 14, o = 10;
-    svg.setAttribute("viewBox", `0 0 ${w + 2 * o} ${h + 2 * o}`);
-    path.setAttribute("d", `M${o + r} ${o} H${o + w - r} Q${o + w} ${o} ${o + w} ${o + r} V${o + h - r} Q${o + w} ${o + h} ${o + w - r} ${o + h} H${o + r} Q${o} ${o + h} ${o} ${o + h - r} V${o + r} Q${o} ${o} ${o + r} ${o} Z`);
-    if (calme || !window.gsap) { path.style.opacity = 0; return; }
-    const L = path.getTotalLength();
-    const st = { v: 0 };
-    gsap.killTweensOf([st, img, path, etin]);
-    gsap.set(path, { strokeDasharray: L, strokeDashoffset: L, opacity: 1 });
-    gsap.set(img, { clipPath: "inset(0 0 100% 0 round 4px)" });
-    gsap.timeline()
-      .to(st, { v: 1, duration: .75, ease: "power1.inOut", onUpdate: () => { const p = path.getPointAtLength(L * st.v); gsap.set(etin, { x: p.x - o, y: p.y - o }); path.style.strokeDashoffset = L * (1 - st.v); } }, 0)
-      .to(etin, { opacity: 1, duration: .1 }, 0)
-      .to(etin, { opacity: 0, duration: .2 }, .7)
-      .to(img, { clipPath: "inset(0 0 0% 0 round 4px)", duration: .8, ease: "power3.inOut" }, .55)
-      .to(path, { opacity: 0, duration: .5 }, 1);
-  }
-  function montrer(i, force) {
-    if (i === actif && !force) return;
-    const avant = actif; actif = i;
-    secM.classList.toggle("est-sombre", !!M[i].sombre);
-    rails.forEach((b, k) => b.setAttribute("aria-current", k === i ? "true" : "false"));
-    txts.forEach((t, k) => { t.classList.toggle("est-active", k === i); t.inert = k !== i; t.setAttribute("aria-hidden", k === i ? "false" : "true"); });
-    photos.forEach((p, k) => p.setAttribute("aria-hidden", k === i ? "false" : "true"));
-    if (window.gsap && !calme) {
-      const dir = i > avant ? 1 : -1;
-      gsap.to(txts[avant], { y: -40 * dir, opacity: 0, duration: .45, ease: "power2.in", overwrite: true });
-      gsap.fromTo(txts[i], { y: 50 * dir, opacity: 0 }, { y: 0, opacity: 1, duration: .8, ease: "power3.out", delay: .15, overwrite: true });
-      gsap.to(photos[avant], { opacity: 0, scale: .96, rotation: -2 * dir, duration: .45, overwrite: true });
-      gsap.fromTo(photos[i], { opacity: 1, scale: 1, rotation: 0 }, { opacity: 1, duration: .01, overwrite: true });
-      decouper(photos[i]);
-    } else {
-      txts.forEach((t, k) => (t.style.opacity = k === i ? 1 : 0));
-      photos.forEach((p, k) => (p.style.opacity = k === i ? 1 : 0));
-    }
-  }
-  txts.forEach((t, k) => { if (k) { t.style.opacity = 0; t.inert = true; } });
-  photos.forEach((p, k) => k && p.setAttribute("aria-hidden", "true"));
-  let stM = null, tweenM = null;
-  if (pin && window.ScrollTrigger) {
-    stM = ScrollTrigger.create({
-      trigger: secM, start: "top top", end: () => "+=" + innerHeight * 4.2, pin: ".matieres__scene", scrub: .6, anticipatePin: 1,
-      onUpdate: (s) => {
-        const p = s.progress * (M.length - 1), i = Math.min(M.length - 2, Math.floor(p)), f = p - i;
-        const k = Math.max(0, Math.min(1, (f - .28) / .44));
-        bruler(i, i + 1, k * k * (3 - 2 * k));
-        montrer(Math.min(M.length - 1, Math.round(p)));
-      }
-    });
-  }
-  if (stM) $("#matieres-aide").textContent = "Faites défiler pour changer de matière";
   const allerMatiere = (i) => {
-    if (stM) { const y = stM.start + (stM.end - stM.start) * (i / (M.length - 1)) + 2; GWC.lenis ? GWC.lenis.scrollTo(y, { duration: 1.6 }) : scrollTo({ top: y, behavior: calme ? "auto" : "smooth" }); return; }
-    if (i === actif) return;
-    const de = actif;
-    montrer(i);
-    if (tweenM) tweenM.kill();
-    if (gl && glPret && window.gsap && !calme) {
-      const st = { k: 0 };
-      tweenM = gsap.to(st, { k: 1, duration: 1.1, ease: "power2.inOut", onUpdate: () => bruler(de, i, st.k), onComplete: () => bruler(de, i, 1) });
-    } else montrerRepli(i);
+    if (stM) { const y = stM.start + (stM.end - stM.start) * (i / (N - 1)) + 1; GWC.lenis ? GWC.lenis.scrollTo(y, { duration: 1.2 + .25 * Math.abs(i - actif) }) : scrollTo({ top: y, behavior: calme ? "auto" : "smooth" }); return; }
+    if (tlM) {
+      const de = tlM.time(), pas = Math.abs(i - de);
+      for (let k = Math.min(i, Math.floor(de)); k <= Math.max(i, Math.ceil(de)); k++) chargerRepli(k);
+      if (vers) vers.kill();
+      vers = tlM.tweenTo(i, { duration: Math.min(2.2, .95 + .3 * Math.max(0, pas - 1)), ease: "power2.inOut" });
+      return;
+    }
+    montrerCalme(i);
   };
   rails.forEach((b, i) => b.addEventListener("click", () => { if (!stM && secM.getBoundingClientRect().top < -60) GWC.allerA(secM); allerMatiere(i); }));
   document.addEventListener("click", (e) => {
@@ -184,7 +231,15 @@
     if (!stM) GWC.allerA(secM);
     allerMatiere(i);
   }, true);
-  visible(secM, () => decouper(photos[0]), { threshold: .3 });
+  /* Premiere apparition : le laser decoupe le cadre de la premiere photo */
+  visible(secM, () => {
+    if (!anime || (tlM && tlM.time() > .05)) return;
+    const c = cadres[0], px = { v: 0 };
+    gsap.set([c.path, c.etin], { opacity: 1 }); gsap.set(c.img, { clipPath: "inset(0% 0% 100% 0% round 4px)" }); laser(c, 0);
+    gsap.timeline().to(px, { v: 1, duration: .85, ease: "power1.inOut", onUpdate: () => laser(c, px.v) })
+      .to(c.img, { clipPath: "inset(0% 0% 0% 0% round 4px)", duration: .8, ease: "power3.inOut" }, .5)
+      .to([c.path, c.etin], { opacity: 0, duration: .4 }, 1);
+  }, { threshold: .3 });
 
   /* ---------- Simulateur ---------- */
   const plaque = $("#plaque"), form = $("#simu-form"), zone = $("#simu-texte"), cpt = $("#simu-compteur"), info = $("#simu-info"), pImg = $("#plaque-img");
