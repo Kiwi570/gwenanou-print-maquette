@@ -33,6 +33,7 @@
       this.cFx = document.createElement("canvas");
       this.cBrule.className = "grav-brule"; this.cFx.className = "grav-fx";
       [this.cBrule, this.cFx].forEach((c) => { c.setAttribute("aria-hidden", "true"); c.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none"; hote.appendChild(c); });
+      this.cFx.style.display = "none";
       this.x1 = this.cBrule.getContext("2d");
       this.x2 = this.cFx.getContext("2d");
       this.src = document.createElement("canvas");
@@ -121,6 +122,12 @@
       this.texte = String(texte || "").slice(0, 120);
       if (opts.police) this.o.police = opts.police;
       if (opts.matiere) this.setMatiere(opts.matiere, true);
+      /* La police doit etre chargee avant de dessiner, sinon le canvas grave avec une police de secours */
+      const p = this.police(), spec = `${p.graisse} 48px ${p.famille}`;
+      if (document.fonts && !opts._police && !document.fonts.check(spec)) {
+        const jeton = (this.jeton = (this.jeton || 0) + 1);
+        return document.fonts.load(spec).catch(() => {}).then(() => (jeton === this.jeton ? this.graver(this.texte, Object.assign({}, opts, { _police: true })) : undefined));
+      }
       this.taille();
       this.composer();
       if (calme() || opts.instant) { this.fini = true; this.dessinerFinal(); opts.fin && opts.fin(); return Promise.resolve(); }
@@ -130,6 +137,7 @@
       const duree = opts.duree || this.o.duree;
       const t0 = performance.now();
       this.fini = false;
+      this.cFx.style.display = "";
       let dernier = t0;
       return new Promise((res) => {
         const image = (t) => {
@@ -194,7 +202,7 @@
           }
           fx.globalAlpha = 1;
           if (p < 1 || this.parts.length || this.ember > 0) this.raf = requestAnimationFrame(image);
-          else { this.fini = true; fx.clearRect(0, 0, W, H); if (this.ink === INKS.braise) this.dessinerFinal(); }
+          else { this.fini = true; fx.clearRect(0, 0, W, H); this.cFx.style.display = "none"; if (this.ink === INKS.braise) this.dessinerFinal(); }
           if (p >= 1 && !this.resolu) { this.resolu = true; opts.fin && opts.fin(); res(); }
         };
         this.resolu = false;

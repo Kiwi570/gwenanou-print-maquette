@@ -18,13 +18,40 @@
   const G = window.GW;
 
   const GWC = (window.GWC = { calme, store, $, $$, finPointeur, lenis: null });
-  if (window.gsap && window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
+  if (window.gsap && window.ScrollTrigger) { gsap.registerPlugin(ScrollTrigger); ScrollTrigger.config({ ignoreMobileResize: true }); }
+
+  /* Typographie francaise : espace insecable avant ? ! : ; et dans les guillemets */
+  GWC.fr = (t) => String(t).replace(/ ([?!:;»])/g, "\u00A0$1").replace(/« /g, "«\u00A0");
+  GWC.frDOM = (racine) => {
+    if (!racine) return;
+    const w = document.createTreeWalker(racine, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (n.parentElement && n.parentElement.closest("script, style, textarea") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT) });
+    let n; while ((n = w.nextNode())) { const v = GWC.fr(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; }
+  };
+  /* Redimensionnement regroupe, ignore les variations de hauteur de la barre d'adresse mobile */
+  GWC.surRedim = (fn, delai = 160) => {
+    let t, w = innerWidth;
+    addEventListener("resize", () => { clearTimeout(t); t = setTimeout(() => { if (innerWidth !== w) { w = innerWidth; fn(); } }, delai); });
+  };
+  /* Appelle cb une fois quand l'element approche de l'ecran */
+  GWC.approche = (el, cb, marge = "600px") => {
+    if (!el) return;
+    if (!("IntersectionObserver" in window)) { cb(); return; }
+    const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { io.disconnect(); cb(); } }), { rootMargin: marge });
+    io.observe(el);
+  };
+  /* Met en pause des animations quand leur zone sort de l'ecran */
+  GWC.pauseHorsEcran = (el, anims) => {
+    if (!el || !anims.length) return;
+    new IntersectionObserver((es) => es.forEach((e) => anims.forEach((a) => (e.isIntersecting ? a.play() : a.pause()))), { rootMargin: "100px" }).observe(el);
+  };
 
   /* ---------- Defilement fluide ---------- */
   if (!calme && window.Lenis && window.gsap) {
     const lenis = new Lenis({ lerp: .1, smoothWheel: true, wheelMultiplier: 1 });
     GWC.lenis = lenis;
     lenis.on("scroll", ScrollTrigger.update);
+    /* Epinglage par transformation : aucun decalage de mise en page (CLS) quand une section se fige */
+    if (finPointeur) ScrollTrigger.defaults({ pinType: "transform" });
     gsap.ticker.add((t) => lenis.raf(t * 1000));
     gsap.ticker.lagSmoothing(0);
   }
@@ -48,7 +75,7 @@
   GWC.toast = (msg) => {
     let t = $(".toast");
     if (!t) { t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); }
-    t.textContent = msg; t.classList.add("visible"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("visible"), 3200);
+    t.textContent = GWC.fr(msg); t.classList.add("visible"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("visible"), 3200);
   };
 
   /* ---------- En-tete ---------- */
@@ -153,9 +180,44 @@
     img.alt = alt || p.nom + (p.detail ? ", " + p.detail : "");
     img.loading = "lazy"; img.decoding = "async";
     if (p.img) { img.src = G.src(p.img, w); img.srcset = G.srcset(p.img, [480, 960]); img.sizes = "(max-width: 600px) 90vw, 320px"; }
-    else { img.dataset.provisoire = "1"; GWC.visuelCode(p.nom, GWC.matiereProduit(p)).then((u) => (img.src = u)); }
+    else {
+      img.dataset.provisoire = "1";
+      img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Crect width='1' height='1' fill='%23DDD3C5'/%3E%3C/svg%3E";
+      GWC.approche(img, () => GWC.visuelCode(p.nom, GWC.matiereProduit(p)).then((u) => (img.src = u)), "500px");
+    }
     return img;
   };
+  /* Carte produit commune a toutes les pages */
+  GWC.carteProduit = (p, { mini = false } = {}) => {
+    const lien = p.page || p.url, ext = p.page ? "" : ' target="_blank" rel="noopener"';
+    const des = p.variantes || p.options ? '<small>dès\u00A0</small>' : "";
+    const nomComplet = p.nom + (p.detail && mini ? ", " + p.detail.toLowerCase() : "");
+    const el = document.createElement("article");
+    el.dataset.carte = ""; el.dataset.id = p.id;
+    if (mini) {
+      el.className = "mini-produit";
+      el.innerHTML = `<div class="mini-produit__img"></div><div><h3>${nomComplet}</h3><div><span class="produit__prix">${des}${G.prix(p.prix)}</span><button class="ajouter" type="button" data-ajouter="${p.id}" aria-label="Ajouter ${p.nom} au panier">Ajouter</button></div></div>`;
+      $(".mini-produit__img", el).appendChild(GWC.imageProduit(p, 480));
+    } else {
+      el.className = "produit";
+      const detail = [p.detail, p.options ? "3 options" : p.variantes ? "Plusieurs variantes" : ""].filter(Boolean).join(", ");
+      el.innerHTML = `<a class="produit__visuel" href="${lien}"${ext} tabindex="-1" aria-hidden="true"></a>
+        <div class="produit__etiquette"><h3><a class="produit__titre" href="${lien}"${ext}>${p.nom}</a></h3>
+        ${detail ? `<p class="produit__detail">${detail}</p>` : ""}
+        <div class="produit__meta"><span class="produit__prix">${des}${G.prix(p.prix)}</span><button class="ajouter" type="button" data-ajouter="${p.id}" aria-label="Ajouter ${p.nom} au panier">Ajouter</button></div></div>`;
+      $(".produit__visuel", el).appendChild(GWC.imageProduit(p, 480));
+      if (finPointeur && !calme && window.gsap) {
+        const v = $(".produit__visuel", el);
+        const rx = gsap.quickTo(v, "rotationY", { duration: .5 }), ry = gsap.quickTo(v, "rotationX", { duration: .5 });
+        el.addEventListener("pointermove", (e) => { const r = v.getBoundingClientRect(); rx(((e.clientX - r.left) / r.width - .5) * 14); ry(-((e.clientY - r.top) / r.height - .5) * 14); });
+        el.addEventListener("pointerleave", () => { rx(0); ry(0); });
+      }
+    }
+    if (p.img) el.querySelector("img").parentElement.classList.remove("provisoire");
+    else el.querySelector(mini ? ".mini-produit__img" : ".produit__visuel").classList.add("provisoire");
+    return el;
+  };
+
   /* Une image manquante recoit un visuel provisoire, jamais un cadre vide */
   document.addEventListener("error", (e) => {
     const im = e.target;
@@ -186,11 +248,12 @@
       <div class="ligne-panier__prix"><span>${l.prix == null ? '<span class="a-completer">Prix à compléter</span>' : G.prix(l.prix * l.qte)}</span><button type="button" class="retirer">Retirer</button></div>
     </li>`;
   }
-  function rendre(etape = "liste") {
+  function rendre(etape = "liste") { rendreBrut(etape); GWC.frDOM(tiroir); }
+  function rendreBrut(etape) {
     if (!tiroir) return;
     const liste = $(".tiroir__liste", tiroir), bas = $(".tiroir__bas", tiroir);
     if (!panier.length && etape !== "fin") {
-      liste.innerHTML = `<li class="tiroir__vide"><p>Votre panier est vide.</p><a class="btn btn--petit" href="index.html#boutique" data-fermer-panier>Voir les créations</a></li>`;
+      liste.innerHTML = `<li class="tiroir__vide"><p>Votre panier est vide.</p><a class="btn btn--petit" href="${document.getElementById("boutique") ? "#boutique" : "./#boutique"}" data-fermer-panier>Voir les créations</a></li>`;
       bas.hidden = true; return;
     }
     bas.hidden = false;
@@ -223,13 +286,13 @@
   GWC.ouvrirPanier = () => {
     if (!tiroir) return;
     dernierFocus = document.activeElement;
-    rendre(); tiroir.hidden = false; requestAnimationFrame(() => tiroir.classList.add("est-ouvert"));
+    rendre(); tiroir.hidden = false; tiroir.inert = false; requestAnimationFrame(() => tiroir.classList.add("est-ouvert"));
     tiroir.setAttribute("aria-hidden", "false"); GWC.lenis && GWC.lenis.stop();
     setTimeout(() => $(".fermer", tiroir).focus(), 60);
   };
   GWC.fermerPanier = () => {
     if (!tiroir) return;
-    tiroir.classList.remove("est-ouvert"); tiroir.setAttribute("aria-hidden", "true"); GWC.lenis && GWC.lenis.start();
+    tiroir.classList.remove("est-ouvert"); tiroir.setAttribute("aria-hidden", "true"); tiroir.inert = true; GWC.lenis && GWC.lenis.start();
     dernierFocus && dernierFocus.focus && dernierFocus.focus();
   };
   if (tiroir) {
@@ -324,24 +387,32 @@
   if (voile && window.gsap) {
     if (store.sget("gw-transition") === "1" && !calme) {
       store.sset("gw-transition", "0");
-      gsap.fromTo(voile, { yPercent: 0 }, { yPercent: -115, duration: .9, ease: "power3.inOut", delay: .05 });
+      voile.style.visibility = "visible";
+      gsap.fromTo(voile, { yPercent: 0 }, { yPercent: -115, duration: .9, ease: "power3.inOut", delay: .05, onComplete: () => (voile.style.visibility = "hidden") });
     }
     document.addEventListener("click", (e) => {
       const a = e.target.closest("a[href]");
       if (!a || calme || e.metaKey || e.ctrlKey || e.shiftKey || a.target === "_blank" || a.hasAttribute("download")) return;
       const url = new URL(a.href, location.href);
-      if (url.origin !== location.origin || !/\.html$|\/$/.test(url.pathname) || (url.pathname === location.pathname && url.hash)) return;
+      if (url.origin !== location.origin || /\.[a-z0-9]{2,4}$/i.test(url.pathname) && !/\.html$/.test(url.pathname) || url.pathname.startsWith("/assets/")) return;
+      const meme = url.pathname.replace(/(index)?(\.html)?$/, "") === location.pathname.replace(/(index)?(\.html)?$/, "");
+      if (meme && url.hash) return;
       e.preventDefault();
       store.sset("gw-transition", "1");
+      voile.style.visibility = "visible";
       gsap.fromTo(voile, { yPercent: 115 }, { yPercent: 0, duration: .65, ease: "power3.inOut", onComplete: () => (location.href = url.href) });
     });
-    addEventListener("pageshow", (e) => { if (e.persisted) gsap.set(voile, { yPercent: 115 }); });
+    addEventListener("pageshow", (e) => { if (e.persisted) { gsap.set(voile, { yPercent: 115 }); voile.style.visibility = "hidden"; } });
   }
 
   /* ---------- Revelations au defilement (etat visible par defaut sans script) ---------- */
   GWC.reveler = (cibles, opts = {}) => {
     if (calme || !window.gsap) return;
+    if (!opts._diffuse) { (window.requestIdleCallback || ((f) => setTimeout(f, 200)))(() => GWC.reveler(cibles, Object.assign({}, opts, { _diffuse: true })), { timeout: 800 }); return; }
+    delete opts._diffuse;
     $$(cibles).forEach((el) => {
+      const r = el.getBoundingClientRect();
+      if (r.top < innerHeight && r.bottom > 0) return;
       gsap.from(el, Object.assign({ y: 40, opacity: 0, duration: 1.1, ease: "power3.out", scrollTrigger: { trigger: el, start: "top 88%", once: true } }, opts));
     });
   };

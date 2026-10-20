@@ -26,16 +26,7 @@
 
   /* Produits par collection */
   $$("[data-produits]").forEach((r) => {
-    r.dataset.produits.split(",").forEach((id) => {
-      const p = G.produit(id); if (!p) return;
-      const lien = p.page || p.url, ext = p.page ? "" : ' target="_blank" rel="noopener"';
-      const el = document.createElement("article");
-      el.className = "produit"; el.dataset.carte = "";
-      el.innerHTML = `<a class="produit__visuel" href="${lien}"${ext} tabindex="-1" aria-hidden="true"></a><div class="produit__etiquette"><h3><a href="${lien}"${ext}>${p.nom}</a></h3><p class="produit__detail">${[p.detail, p.options ? "3 options" : p.variantes ? "Plusieurs variantes" : ""].filter(Boolean).join(", ") || "&nbsp;"}</p><div class="produit__meta"><span class="produit__prix">${p.variantes || p.options ? "<small>dès</small>" : ""}${G.prix(p.prix)}</span><button class="ajouter" type="button" data-ajouter="${p.id}" aria-label="Ajouter ${p.nom} au panier">Ajouter</button></div></div>`;
-      $(".produit__visuel", el).appendChild(GWC.imageProduit(p, 480));
-      r.appendChild(el);
-    });
-    GWC.marquerProvisoires(r);
+    r.dataset.produits.split(",").forEach((id) => { const p = G.produit(id); if (p) r.appendChild(GWC.carteProduit(p)); });
   });
 
   /* Galeries decoupees au laser : un cache se retire derriere le trait du laser */

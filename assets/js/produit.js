@@ -112,14 +112,8 @@
 
   /* Articles connexes (meme liste que la boutique) */
   const cx = $("#connexes");
-  A.connexes.forEach((id) => {
-    const p = G.produit(id), el = document.createElement("article");
-    el.className = "produit"; el.dataset.carte = "";
-    el.innerHTML = `<a class="produit__visuel" href="${p.url}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"></a><div class="produit__etiquette"><h3><a href="${p.url}" target="_blank" rel="noopener">${p.nom}</a></h3><p class="produit__detail">${p.variantes ? "Plusieurs variantes" : "&nbsp;"}</p><div class="produit__meta"><span class="produit__prix">${p.variantes ? "<small>dès</small>" : ""}${G.prix(p.prix)}</span><button class="ajouter" type="button" data-ajouter="${p.id}" aria-label="Ajouter ${p.nom} au panier">Ajouter</button></div></div>`;
-    $(".produit__visuel", el).appendChild(GWC.imageProduit(p, 480));
-    cx.appendChild(el);
-  });
-  GWC.marquerProvisoires(cx);
+  A.connexes.forEach((id) => cx.appendChild(GWC.carteProduit(G.produit(id))));
+
 
   if (window.gsap && !calme) {
     gsap.from(".fiche__infos > *", { y: 26, opacity: 0, duration: .8, ease: "power3.out", stagger: .06, delay: .2 });

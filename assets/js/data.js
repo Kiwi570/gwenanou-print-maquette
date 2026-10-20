@@ -28,15 +28,15 @@
     /* Matieres : textes repris des pages du site actuel. */
     matieres: [
       {
-        id: "bois", nom: "Bois", page: "bois.html", sombre: false,
+        id: "bois", nom: "Bois", page: "bois", sombre: false,
         texte: "Décorations, panneaux, cadeaux, objets artisanaux ou signalétiques : la découpe laser permet des formes détaillées et des finitions soignées qui mettent en valeur l’aspect naturel du bois.",
-        des: "dès 1,50 €", photo: "site/deco-murale-elephants", photoAlt: "Décoration murale en bois découpée au laser : éléphants",
+        des: "dès 1,50\u00A0€", photo: "site/deco-murale-elephants", photoAlt: "Décoration murale en bois découpée au laser : éléphants",
         encre: "bois"
       },
       {
         id: "metal", nom: "Métal", page: null, sombre: false,
         texte: "Porte-clés, médailles pour chien, plaques de boîte aux lettres ou objets professionnels : une gravure précise, élégante et résistante dans le temps.",
-        des: "dès 4,00 €", photo: "site/medaille-naia", photoAlt: "Médaille pour chien gravée au prénom Naïa",
+        des: "dès 4,00\u00A0€", photo: "site/medaille-naia", photoAlt: "Médaille pour chien gravée au prénom Naïa",
         encre: "metal"
       },
       {
@@ -48,7 +48,7 @@
       {
         id: "ardoise", nom: "Ardoise", page: null, sombre: true,
         texte: "Dessous de verre, plaques décoratives, panneaux ou cadeaux : la gravure révèle un contraste élégant sur un rendu naturel et authentique.",
-        des: "dès 30,00 €", photo: "site/ardoise-tete-de-mort-fleurie", photoAlt: "Ardoise gravée d’une tête de mort fleurie",
+        des: "dès 30,00\u00A0€", photo: "site/ardoise-tete-de-mort-fleurie", photoAlt: "Ardoise gravée d’une tête de mort fleurie",
         encre: "ardoise"
       },
       {
@@ -60,7 +60,7 @@
       {
         id: "miroir", nom: "Miroir", page: null, sombre: false,
         texte: "Prénom, photo, texte ou logo : un miroir gravé sur mesure pour vos cadeaux et vos événements.",
-        des: "dès 10,00 €", photo: "site/miroir-cheval", photoAlt: "Miroir gravé d’un cheval au galop",
+        des: "dès 10,00\u00A0€", photo: "site/miroir-cheval", photoAlt: "Miroir gravé d’un cheval au galop",
         encre: "miroir"
       }
     ],
@@ -90,7 +90,7 @@
 
     /* 34 articles de la boutique SumUp. Orthographe corrigee, prix exacts. */
     produits: [
-      { id: "arbres-de-vie-base-3-prenoms-1", nom: "Arbre de vie", detail: "Base + 3 prénoms", prix: 15, variantes: true, occ: ["naissance"], page: "arbre-de-vie.html", selection: 1 },
+      { id: "arbres-de-vie-base-3-prenoms-1", nom: "Arbre de vie", detail: "Base + 3 prénoms", prix: 15, variantes: true, occ: ["naissance"], page: "arbre-de-vie", selection: 1 },
       { id: "ardoise-personnalisee", nom: "Ardoise personnalisée", prix: 30, occ: ["maison"], selection: 6 },
       { id: "attrape-reve", nom: "Attrape-rêve", prix: 12, occ: ["maison"] },
       { id: "boucle-oreille", nom: "Boucles d’oreilles", prix: 5, variantes: true, occ: ["bijoux"] },
@@ -124,7 +124,7 @@
       { id: "support-de-boucles", nom: "Support de boucles d’oreilles", prix: 15, occ: ["bijoux"] },
       { id: "support-de-medaille", nom: "Support de médailles", prix: 15, occ: ["maison"] },
       { id: "support-pour-carte", nom: "Support pour cartes", prix: 12, occ: ["jeux"] }
-    ].map((x) => ({ ...x, url: p(x.id), img: PHOTOS[x.id] ? `site/${PHOTOS[x.id]}` : null })),
+    ].map((x) => ({ ...x, nom: x.nom.replace(/« /g, "«\u00A0").replace(/ »/g, "\u00A0»"), url: p(x.id), img: PHOTOS[x.id] ? `site/${PHOTOS[x.id]}` : null })),
 
     /* Fiche Arbre de vie : options reelles de la boutique, prix des options absents du site. */
     arbre: {
@@ -134,7 +134,9 @@
     }
   });
 
-  GW.prix = (v) => (v == null ? "Prix à compléter" : v.toLocaleString("fr-FR", { style: "currency", currency: "EUR" }));
+  /* Prix au format francais ; l'espace fine insecable est remplacee par une insecable presente dans les polices */
+  const FORMAT = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
+  GW.prix = (v) => (v == null ? "Prix à compléter" : FORMAT.format(v).replace(/\u202F/g, "\u00A0"));
   GW.produit = (id) => GW.produits.find((x) => x.id === id);
   GW.src = (name, w) => `assets/img/${name}-${w}.webp`;
   GW.srcset = (name, ws) => ws.map((w) => `assets/img/${name}-${w}.webp ${w}w`).join(", ");
