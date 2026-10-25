@@ -14,11 +14,16 @@
 <meta property="og:site_name" content="Gwenanou Print">
 <meta property="og:title" content="Arbre de vie personnalisé, Gwenanou Print">
 <meta property="og:description" content="Arbre de vie en bois découpé au laser, de 3 à 10 prénoms gravés. 15 € la version 3 prénoms.">
+<meta property="og:image" content="https://gwenanou-print-maquette.vercel.app/assets/img/partage-gwenanou.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://gwenanou-print-maquette.vercel.app/arbre-de-vie">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" sizes="160x160" href="assets/img/marque/logo-160.png">
 <link rel="apple-touch-icon" href="assets/img/marque/apple-touch-icon.png">
 <link rel="preload" href="assets/fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/instrument-sans.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/css/site.css?v=b8288de3">
+<link rel="stylesheet" href="assets/css/site.css?v=1423f326">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "Gwenanou Print", "description": "Création et personnalisation d’objets décoratifs par découpe et gravure laser sur bois, verre, ardoise, cuir, métal et miroir.", "email": "gwenanou.print@gmail.com", "telephone": "+33 6 14 61 38 36", "sameAs": ["https://instagram.com/gwenanou_print", "https://www.facebook.com/profile.php?id=100088041895204", "https://www.linkedin.com/company/gwenanou-print/", "https://gwenanou-print.sumupstore.com"]}</script>
 </head>
 <body class="page-produit page-claire">
@@ -26,7 +31,7 @@
 <div class="transition-page" aria-hidden="true" style="background-image:url(assets/img/grok/texture-bois-1600.webp)"></div>
 <header class="entete">
   <div class="cadre entete__in">
-    <a class="marque" href="./" aria-label="Gwenanou Print, accueil">
+    <a class="marque" href="./">
       <img src="assets/img/marque/logo-160.webp" width="42" height="42" alt="">
       <span>Gwenanou Print<small>Gravure et découpe laser</small></span>
     </a>
@@ -54,7 +59,7 @@
     <button class="burger" type="button" aria-expanded="false" aria-controls="menu-mobile" aria-label="Ouvrir le menu"><span></span></button>
   </div>
 </header>
-<div class="menu-mobile" id="menu-mobile">
+<div class="menu-mobile" id="menu-mobile" data-lenis-prevent>
   <a href="./#matieres">Matières</a>
   <div class="menu-mobile__matieres">
     <a href="bois">Bois</a><a href="./#matiere-metal" data-matiere="metal">Métal</a><a href="./#matiere-verre" data-matiere="verre">Verre</a><a href="./#matiere-ardoise" data-matiere="ardoise">Ardoise</a><a href="./#matiere-cuir" data-matiere="cuir">Cuir</a><a href="./#matiere-miroir" data-matiere="miroir">Miroir</a>
@@ -198,14 +203,14 @@
 
 <aside class="tiroir" id="panier" role="dialog" aria-modal="true" aria-labelledby="panier-titre" aria-hidden="true" inert hidden>
   <div class="tiroir__fond"></div>
-  <div class="tiroir__panneau">
+  <div class="tiroir__panneau" data-lenis-prevent>
     <div class="tiroir__haut"><h2 id="panier-titre">Votre panier</h2><button class="fermer" type="button" aria-label="Fermer le panier"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="1.8"/></svg></button></div>
     <ul class="tiroir__liste" aria-live="polite"></ul>
     <div class="tiroir__bas"></div>
   </div>
 </aside>
 
-<dialog class="boite" id="mentions" aria-labelledby="mentions-titre">
+<dialog class="boite" id="mentions" data-lenis-prevent aria-labelledby="mentions-titre">
   <div class="boite__in">
     <button class="fermer boite__fermer" type="button" aria-label="Fermer"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="1.8"/></svg></button>
     <h2 id="mentions-titre">Mentions légales</h2>
@@ -228,13 +233,13 @@
 </dialog>
 
 
-<script src="assets/js/data.js?v=29934757"></script>
+<script src="assets/js/data.js?v=6c4ea839"></script>
 <script src="assets/vendor/gsap.min.js?v=9396f256"></script>
 <script src="assets/vendor/ScrollTrigger.min.js?v=05ca5ad8"></script>
 <script src="assets/vendor/lenis.min.js?v=99a73c03"></script>
-<script src="assets/js/core.js?v=71731103"></script>
+<script src="assets/js/core.js?v=ef638785"></script>
 <script src="assets/js/engrave.js?v=0d943de2"></script>
 <script src="assets/js/pied.js?v=f018b1e7"></script>
-<script src="assets/js/produit.js?v=2dbe4afd"></script>
+<script src="assets/js/produit.js?v=6136d783"></script>
 </body>
 </html>

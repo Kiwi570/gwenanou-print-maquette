@@ -67,6 +67,8 @@
     const el = document.getElementById(a.getAttribute("href").slice(1));
     if (!el) return;
     e.preventDefault(); fermerMenu(); GWC.allerA(el);
+    if (!el.matches("a, button, input, select, textarea, [tabindex]")) el.setAttribute("tabindex", "-1");
+    el.focus({ preventScroll: true });
     if (a.dataset.filtre) document.dispatchEvent(new CustomEvent("gw:filtre", { detail: a.dataset.filtre }));
   });
 
@@ -102,11 +104,30 @@
     document.addEventListener("click", (e) => { if (!nm.contains(e.target)) ouvrir(false); });
   }
   const burger = $(".burger");
-  function fermerMenu() { html.classList.remove("menu-ouvert"); burger && burger.setAttribute("aria-expanded", "false"); GWC.lenis && GWC.lenis.start(); }
+  const menuM = $("#menu-mobile");
+  const horsMenu = (on) => $$("body > main, body > footer, body > .passer").forEach((el) => { el.inert = on; });
+  function fermerMenu() {
+    if (!html.classList.contains("menu-ouvert")) return;
+    html.classList.remove("menu-ouvert"); horsMenu(false);
+    if (burger) { burger.setAttribute("aria-expanded", "false"); burger.setAttribute("aria-label", "Ouvrir le menu"); }
+    GWC.lenis && GWC.lenis.start();
+  }
+  GWC.fermerMenu = fermerMenu;
   if (burger) burger.addEventListener("click", () => {
     const o = !html.classList.contains("menu-ouvert");
-    html.classList.toggle("menu-ouvert", o); burger.setAttribute("aria-expanded", o);
-    if (GWC.lenis) o ? GWC.lenis.stop() : GWC.lenis.start();
+    if (!o) { fermerMenu(); return; }
+    html.classList.add("menu-ouvert"); horsMenu(true); burger.setAttribute("aria-expanded", "true"); burger.setAttribute("aria-label", "Fermer le menu");
+    GWC.lenis && GWC.lenis.stop();
+    const l = menuM && $("a", menuM); l && l.focus();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (!html.classList.contains("menu-ouvert") || !menuM) return;
+    if (e.key === "Escape") { fermerMenu(); burger.focus(); return; }
+    if (e.key !== "Tab") return;
+    const f = [burger, ...$$("a[href], button:not([disabled])", menuM)];
+    const i = f.indexOf(document.activeElement);
+    if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+    else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
   });
   $$(".menu-mobile a").forEach((a) => a.addEventListener("click", fermerMenu));
 
@@ -264,21 +285,21 @@
       liste.innerHTML = panier.map(ligneHTML).join("");
       $$(".ligne-panier__img", liste).forEach((d) => { const p = G.produit(d.dataset.produit); if (p) d.appendChild(GWC.imageProduit(p, 480)); });
       bas.innerHTML = `<div class="total"><span>Sous-total${inconnus ? " provisoire" : ""}</span><strong>${G.prix(total)}</strong></div>
-        ${inconnus ? `<p class="petit">${inconnus} article${inconnus > 1 ? "s" : ""} sans prix affiché sur le site : prix à compléter.</p>` : ""}
-        <p class="petit">Livraison ou retrait : <span class="a-completer">à compléter</span> · TVA non applicable, art. 293 B du CGI <span class="a-completer">statut à confirmer</span></p>
+        ${inconnus ? `<p class="petit">${inconnus} article${inconnus > 1 ? "s" : ""} sans prix affiché sur le site : prix à compléter.</p>` : ""}
+        <p class="petit">Livraison ou retrait : <span class="a-completer">à compléter</span> · TVA non applicable, art. 293 B du CGI <span class="a-completer">statut à confirmer</span></p>
         <button class="btn" type="button" data-etape="recap">Commander</button>`;
     } else if (etape === "recap") {
       liste.innerHTML = `<li class="recap-commande"><h3 class="titre" style="font-size:1.6rem">Récapitulatif</h3>
         ${panier.map((l) => { const p = G.produit(l.id) || {}; return `<div class="total" style="font-weight:500"><span>${l.qte} × ${p.nom}${l.option ? " (" + l.option + ")" : ""}</span><span>${l.prix == null ? "à compléter" : G.prix(l.prix * l.qte)}</span></div>`; }).join("")}
-        <p class="petit">Dans le site final, la commande se règle sur la boutique Gwenanou Print (SumUp). Chaque article y a sa fiche :</p>
+        <p class="petit">Dans le site final, la commande se règle sur la boutique Gwenanou Print (SumUp). Chaque article y a sa fiche :</p>
         ${panier.map((l) => { const p = G.produit(l.id) || {}; return `<a class="lien" href="${p.url}" target="_blank" rel="noopener">${p.nom} sur la boutique</a>`; }).join("")}
-        <p class="petit">Moyens de paiement : ceux de la boutique SumUp du client <span class="a-completer">à confirmer</span></p>
-        <p class="petit">Objets personnalisés : le droit de rétractation ne s’applique pas aux biens confectionnés selon vos indications (article L221-28 du Code de la consommation).</p></li>`;
+        <p class="petit">Moyens de paiement : ceux de la boutique SumUp du client <span class="a-completer">à confirmer</span></p>
+        <p class="petit">Objets personnalisés : le droit de rétractation ne s’applique pas aux biens confectionnés selon vos indications (article L221-28 du Code de la consommation).</p></li>`;
       bas.innerHTML = `<div class="total"><span>Total${inconnus ? " provisoire" : ""}</span><strong>${G.prix(total)}</strong></div>
         <button class="btn" type="button" data-etape="fin">Valider la commande (simulation)</button>
         <button class="btn btn--ligne btn--petit" type="button" data-etape="liste">Modifier le panier</button>`;
     } else {
-      liste.innerHTML = `<li class="tiroir__vide"><h3 class="titre" style="font-size:2rem">Commande simulée</h3><p>Ceci est une maquette : rien n’a été envoyé ni payé. Dans le site final, cette étape renverra vers le paiement sécurisé de la boutique.</p></li>`;
+      liste.innerHTML = `<li class="tiroir__vide"><h3 class="titre" style="font-size:2rem">Commande simulée</h3><p>Ceci est une maquette : rien n’a été envoyé ni payé. Dans le site final, cette étape renverra vers le paiement sécurisé de la boutique.</p></li>`;
       bas.innerHTML = `<button class="btn" type="button" data-vider>Vider le panier et continuer</button>`;
     }
   }
@@ -287,12 +308,12 @@
     if (!tiroir) return;
     dernierFocus = document.activeElement;
     rendre(); tiroir.hidden = false; tiroir.inert = false; requestAnimationFrame(() => tiroir.classList.add("est-ouvert"));
-    tiroir.setAttribute("aria-hidden", "false"); GWC.lenis && GWC.lenis.stop();
+    tiroir.setAttribute("aria-hidden", "false"); html.classList.add("verrou"); GWC.lenis && GWC.lenis.stop();
     setTimeout(() => $(".fermer", tiroir).focus(), 60);
   };
   GWC.fermerPanier = () => {
     if (!tiroir) return;
-    tiroir.classList.remove("est-ouvert"); tiroir.setAttribute("aria-hidden", "true"); tiroir.inert = true; GWC.lenis && GWC.lenis.start();
+    tiroir.classList.remove("est-ouvert"); tiroir.setAttribute("aria-hidden", "true"); tiroir.inert = true; html.classList.remove("verrou"); GWC.lenis && GWC.lenis.start();
     dernierFocus && dernierFocus.focus && dernierFocus.focus();
   };
   if (tiroir) {
@@ -364,10 +385,10 @@
     const b = e.target.closest("[data-copier]");
     if (!b) return;
     const v = b.dataset.copier;
-    try { await navigator.clipboard.writeText(v); GWC.toast(`Copié : ${v}`); }
+    try { await navigator.clipboard.writeText(v); GWC.toast(`Copié : ${v}`); }
     catch (err) {
       const s = b.previousElementSibling; if (s) { const r = document.createRange(); r.selectNodeContents(s); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); }
-      GWC.toast("Texte sélectionné : copiez-le avec Cmd+C ou Ctrl+C.");
+      GWC.toast("Texte sélectionné : copiez-le avec Cmd+C ou Ctrl+C.");
     }
   });
 
@@ -379,7 +400,8 @@
 
   /* ---------- Mentions legales ---------- */
   const dlg = $("#mentions");
-  $$("[data-mentions]").forEach((b) => b.addEventListener("click", () => dlg && dlg.showModal()));
+  $$("[data-mentions]").forEach((b) => b.addEventListener("click", () => { if (!dlg) return; dlg.showModal(); html.classList.add("verrou"); GWC.lenis && GWC.lenis.stop(); }));
+  dlg && dlg.addEventListener("close", () => { html.classList.remove("verrou"); GWC.lenis && GWC.lenis.start(); });
   dlg && dlg.addEventListener("click", (e) => { if (e.target === dlg || e.target.closest(".boite__fermer")) dlg.close(); });
 
   /* ---------- Transitions de page ---------- */
@@ -397,12 +419,13 @@
       if (url.origin !== location.origin || /\.[a-z0-9]{2,4}$/i.test(url.pathname) && !/\.html$/.test(url.pathname) || url.pathname.startsWith("/assets/")) return;
       const meme = url.pathname.replace(/(index)?(\.html)?$/, "") === location.pathname.replace(/(index)?(\.html)?$/, "");
       if (meme && url.hash) return;
+      if (meme && url.search === location.search) { e.preventDefault(); fermerMenu(); GWC.allerA(document.body); return; }
       e.preventDefault();
       store.sset("gw-transition", "1");
       voile.style.visibility = "visible";
       gsap.fromTo(voile, { yPercent: 115 }, { yPercent: 0, duration: .65, ease: "power3.inOut", onComplete: () => (location.href = url.href) });
     });
-    addEventListener("pageshow", (e) => { if (e.persisted) { gsap.set(voile, { yPercent: 115 }); voile.style.visibility = "hidden"; } });
+    addEventListener("pageshow", (e) => { if (e.persisted) { gsap.set(voile, { yPercent: 115 }); voile.style.visibility = "hidden"; fermerMenu(); } });
   }
 
   /* ---------- Revelations au defilement (etat visible par defaut sans script) ---------- */

@@ -228,6 +228,9 @@
     const i = M.findIndex((m) => m.id === a.dataset.matiere);
     if (i < 0) return;
     e.preventDefault(); e.stopPropagation();
+    GWC.fermerMenu && GWC.fermerMenu();
+    const nmO = document.querySelector(".nav-matieres[data-ouvert='true']");
+    if (nmO) { nmO.dataset.ouvert = false; const bb = nmO.querySelector("button"); bb && bb.setAttribute("aria-expanded", "false"); }
     if (!stM) GWC.allerA(secM);
     allerMatiere(i);
   }, true);
@@ -470,7 +473,7 @@
     if (manquants.length) {
       err.hidden = false;
       const c = manquants[0];
-      err.textContent = GWC.fr(c.type === "email" && c.value ? "Vérifiez l’adresse e-mail : elle doit ressembler à nom@domaine.fr." : c.type === "checkbox" ? "Cochez la case pour que l’atelier puisse vous recontacter." : `Complétez le champ « ${$(`label[for="${c.id}"]`).textContent} ».`);
+      err.textContent = GWC.fr(c.type === "email" && c.value ? "Vérifiez l’adresse e-mail : elle doit ressembler à nom@domaine.fr." : c.type === "checkbox" ? "Cochez la case pour que l’atelier puisse vous recontacter." : `Complétez le champ « ${$(`label[for="${c.id}"]`).textContent} ».`);
       c.focus(); return false;
     }
     return true;

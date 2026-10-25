@@ -89,7 +89,7 @@
     const vides = Array.from(zone.children).filter((i) => !i.value.trim());
     if (vides.length) { vides[0].classList.add("erreur"); vides[0].focus(); GWC.toast(`Indiquez les ${nb} prénoms avant d’ajouter l’arbre au panier.`); setTimeout(() => vides.forEach((v) => v.classList.remove("erreur")), 2500); return; }
     const opt = A.options.find((o) => o.n === nb);
-    const option = `${nb} prénoms : ${valeurs.slice(0, nb).map((v) => v.trim()).join(", ")}`;
+    const option = `${nb} prénoms : ${valeurs.slice(0, nb).map((v) => v.trim()).join(", ")}`;
     GWC.ajouter(A.id, { qte: q, option, prix: opt.prix, depuis: img, nomOption: `${nb} prénoms` });
   });
 

@@ -35,7 +35,7 @@
     const w = v.clientWidth, h = v.clientHeight, o = 8, r = 6;
     svg.setAttribute("viewBox", `0 0 ${w + 2 * o} ${h + 2 * o}`);
     path.setAttribute("d", `M${o + r} ${o} H${o + w - r} Q${o + w} ${o} ${o + w} ${o + r} V${o + h - r} Q${o + w} ${o + h} ${o + w - r} ${o + h} H${o + r} Q${o} ${o + h} ${o} ${o + h - r} V${o + r} Q${o} ${o} ${o + r} ${o} Z`);
-    if (calme || !window.gsap) { path.style.opacity = 0; cache && cache.remove(); return; }
+    if (calme || !window.gsap || !cache) { path.style.opacity = 0; cache && cache.remove(); return; }
     const L = path.getTotalLength();
     gsap.set(path, { strokeDasharray: L, strokeDashoffset: L, opacity: 1 });
     gsap.timeline()

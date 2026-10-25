@@ -29,13 +29,13 @@
     matieres: [
       {
         id: "bois", nom: "Bois", page: "bois", sombre: false,
-        texte: "Décorations, panneaux, cadeaux, objets artisanaux ou signalétiques : la découpe laser permet des formes détaillées et des finitions soignées qui mettent en valeur l’aspect naturel du bois.",
-        des: "dès 1,50\u00A0€", photo: "site/deco-murale-elephants", photoAlt: "Décoration murale en bois découpée au laser : éléphants",
+        texte: "Décorations, panneaux, cadeaux, objets artisanaux ou signalétiques : la découpe laser permet des formes détaillées et des finitions soignées qui mettent en valeur l’aspect naturel du bois.",
+        des: "dès 1,50\u00A0€", photo: "site/deco-murale-elephants", photoAlt: "Décoration murale en bois découpée au laser : éléphants",
         encre: "bois"
       },
       {
         id: "metal", nom: "Métal", page: null, sombre: false,
-        texte: "Porte-clés, médailles pour chien, plaques de boîte aux lettres ou objets professionnels : une gravure précise, élégante et résistante dans le temps.",
+        texte: "Porte-clés, médailles pour chien, plaques de boîte aux lettres ou objets professionnels : une gravure précise, élégante et résistante dans le temps.",
         des: "dès 4,00\u00A0€", photo: "site/medaille-naia", photoAlt: "Médaille pour chien gravée au prénom Naïa",
         encre: "metal"
       },
@@ -47,19 +47,19 @@
       },
       {
         id: "ardoise", nom: "Ardoise", page: null, sombre: true,
-        texte: "Dessous de verre, plaques décoratives, panneaux ou cadeaux : la gravure révèle un contraste élégant sur un rendu naturel et authentique.",
+        texte: "Dessous de verre, plaques décoratives, panneaux ou cadeaux : la gravure révèle un contraste élégant sur un rendu naturel et authentique.",
         des: "dès 30,00\u00A0€", photo: "site/ardoise-tete-de-mort-fleurie", photoAlt: "Ardoise gravée d’une tête de mort fleurie",
         encre: "ardoise"
       },
       {
         id: "cuir", nom: "Cuir", page: null, sombre: true,
-        texte: "Portefeuilles, porte-clés, bracelets, étiquettes : un texte, un logo ou un motif pour une finition haut de gamme et authentique.",
+        texte: "Portefeuilles, porte-clés, bracelets, étiquettes : un texte, un logo ou un motif pour une finition haut de gamme et authentique.",
         des: "sur devis", photo: "site/dessous-de-verre-cuir", photoAlt: "Dessous de verre en cuir gravé d’une tête de mort mexicaine",
         encre: "cuir"
       },
       {
         id: "miroir", nom: "Miroir", page: null, sombre: false,
-        texte: "Prénom, photo, texte ou logo : un miroir gravé sur mesure pour vos cadeaux et vos événements.",
+        texte: "Prénom, photo, texte ou logo : un miroir gravé sur mesure pour vos cadeaux et vos événements.",
         des: "dès 10,00\u00A0€", photo: "site/miroir-cheval", photoAlt: "Miroir gravé d’un cheval au galop",
         encre: "miroir"
       }
@@ -94,11 +94,11 @@
       { id: "ardoise-personnalisee", nom: "Ardoise personnalisée", prix: 30, occ: ["maison"], selection: 6 },
       { id: "attrape-reve", nom: "Attrape-rêve", prix: 12, occ: ["maison"] },
       { id: "boucle-oreille", nom: "Boucles d’oreilles", prix: 5, variantes: true, occ: ["bijoux"] },
-      { id: "boule-de-noel-bonhomme-de-neige", nom: "Boule de Noël « Bonhomme de neige »", prix: 2.5, variantes: true, occ: ["noel"], boule: true },
-      { id: "boule-de-noel-cerf", nom: "Boule de Noël « Cerf »", prix: 2.5, variantes: true, occ: ["noel"], boule: true, selection: 7 },
-      { id: "boule-de-noel-foret", nom: "Boule de Noël « Forêt »", prix: 2.5, variantes: true, occ: ["noel"], boule: true },
-      { id: "boule-de-noel-joyeu-noel", nom: "Boule de Noël « Joyeux Noël »", prix: 2.5, variantes: true, occ: ["noel"], boule: true },
-      { id: "boule-de-noel-sapin", nom: "Boule de Noël « Sapin »", prix: 2.5, variantes: true, occ: ["noel"], boule: true },
+      { id: "boule-de-noel-bonhomme-de-neige", nom: "Boule de Noël « Bonhomme de neige »", prix: 2.5, variantes: true, occ: ["noel"], boule: true },
+      { id: "boule-de-noel-cerf", nom: "Boule de Noël « Cerf »", prix: 2.5, variantes: true, occ: ["noel"], boule: true, selection: 7 },
+      { id: "boule-de-noel-foret", nom: "Boule de Noël « Forêt »", prix: 2.5, variantes: true, occ: ["noel"], boule: true },
+      { id: "boule-de-noel-joyeu-noel", nom: "Boule de Noël « Joyeux Noël »", prix: 2.5, variantes: true, occ: ["noel"], boule: true },
+      { id: "boule-de-noel-sapin", nom: "Boule de Noël « Sapin »", prix: 2.5, variantes: true, occ: ["noel"], boule: true },
       { id: "cadre-de-naissance", nom: "Cadre de naissance", prix: 35, occ: ["naissance"], selection: 3 },
       { id: "calendrier-calendrier-avec-20-pastilles", nom: "Calendrier", detail: "Avec 20 pastilles", prix: 17, occ: ["maison"] },
       { id: "couronne-de-noel", nom: "Couronne de Noël", prix: 15, variantes: true, occ: ["noel"] },

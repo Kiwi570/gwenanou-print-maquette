@@ -302,7 +302,9 @@ html.calme .matieres__rail button[aria-current="true"], .matieres:not(.matieres-
 
 /* ---------- Occasions (galerie horizontale) ---------- */
 .occasions { overflow: hidden; }
-.occasions__piste { display: flex; gap: clamp(14px, 2vw, 28px); padding-left: var(--gout); padding-right: var(--gout-d); will-change: transform; }
+.occasions__piste { display: flex; gap: clamp(14px, 2vw, 28px); padding-left: var(--gout); padding-right: var(--gout-d); will-change: transform; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; padding-bottom: 6px; }
+/* piste défilable par défaut (mode calme, sans JS) ; l'épinglage horizontal la remplace sur ordinateur */
+.occasions.est-epingle .occasions__piste { overflow: visible; scroll-snap-type: none; }
 .occasion { position: relative; flex: none; width: min(clamp(260px, 30vw, 430px), calc((100svh - 300px) / 1.35)); aspect-ratio: 4 / 5.4; border-radius: 6px; overflow: hidden; text-decoration: none; color: var(--lin-clair); transform-style: preserve-3d; background: var(--noyer-2); }
 .occasion img { position: absolute; inset: -6% -6%; width: 112%; height: 112%; max-width: none; object-fit: cover; transition: transform 1.1s var(--ease-out); }
 .occasion::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(20, 12, 7, .82)); }
@@ -692,3 +694,18 @@ html.calme .mode-calme span { animation: none; }
 .noel .petit { color: rgba(246, 242, 235, .78); }
 .matiere-txt[inert] { pointer-events: none; }
 .matieres:not(.matieres--anime) .rail__curseur { display: none; }
+
+/* ---------- Finitions (audit) ---------- */
+/* couches ouvertes (menu, panier, mentions) : la page ne défile plus, même sans Lenis ; le menu défile en paysage */
+html.verrou, html.menu-ouvert { overflow: hidden; }
+.menu-mobile, .tiroir__liste, .boite { overscroll-behavior: contain; }
+@media (max-height: 520px) { .menu-mobile a { font-size: 1.6rem; } }
+/* la barre de défilement ne disparaît plus à l'ouverture du panier : pas de décalage de la page */
+html { scrollbar-gutter: stable; }
+/* cibles tactiles : 44 px */
+.btn--petit { min-height: 44px; }
+.ligne-panier .retirer, [data-mentions] { padding-block: 12px; }
+.mode-calme, .ouverture__passer { min-height: 44px; }
+@media (pointer: coarse) { .menu-mobile__matieres a, .sommaire a, .copier { min-height: 44px; display: inline-flex; align-items: center; } }
+/* coordonnées devenues liens */
+.menu-mobile__contact a { color: inherit; }
