@@ -93,6 +93,10 @@
     dernierY = y;
   };
   addEventListener("scroll", surDefilement, { passive: true }); surDefilement();
+  /* Hauteur reelle de l'en-tete, pour les blocs collants et epingles */
+  const majEntete = () => entete && html.style.setProperty("--entete-h", entete.offsetHeight + "px");
+  majEntete();
+  if (entete && window.ResizeObserver) new ResizeObserver(majEntete).observe(entete);
 
   const nm = $(".nav-matieres");
   if (nm) {

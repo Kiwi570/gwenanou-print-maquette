@@ -277,7 +277,7 @@
     secO.classList.add("est-epingle");
     const dernier = pisteO.lastElementChild;
     const dist = () => Math.max(0, dernier.offsetLeft + dernier.offsetWidth + parseFloat(getComputedStyle(pisteO).paddingRight) - innerWidth);
-    const tw = gsap.to(pisteO, { x: () => -dist(), ease: "none", scrollTrigger: { trigger: secO, start: "top top", end: () => "+=" + dist(), pin: true, scrub: .8, invalidateOnRefresh: true, anticipatePin: 1 } });
+    const tw = gsap.to(pisteO, { x: () => -dist(), ease: "none", scrollTrigger: { trigger: secO, start: "top top", end: () => "+=" + dist(), pin: true, scrub: .8, invalidateOnRefresh: true } });
     /* Au clavier, la carte qui recoit le focus est amenee a l'ecran */
     pisteO.addEventListener("focusin", (e) => {
       const c = e.target.closest(".occasion, .occasion--fin"), st = tw.scrollTrigger;
