@@ -98,6 +98,29 @@
   majEntete();
   if (entete && window.ResizeObserver) new ResizeObserver(majEntete).observe(entete);
 
+  /* ---------- Barre d'actions du bas (telephone) ---------- */
+  const barre = $(".barre-bas");
+  if (barre) {
+    const majBarresH = () => html.style.setProperty("--barres-h", barre.offsetHeight + "px");
+    majBarresH();
+    if (window.ResizeObserver) new ResizeObserver(majBarresH).observe(barre);
+    const heros = $(".heros, .heros-bois, .fiche__galerie");
+    let horsHeros = !heros;
+    const dessus = new Set();
+    const majBarre = () => barre.classList.toggle("est-visible", horsHeros && !dessus.size);
+    if (window.IntersectionObserver) {
+      const io = new IntersectionObserver((es) => {
+        es.forEach((e) => {
+          if (e.target === heros) horsHeros = !e.isIntersecting;
+          else if (e.isIntersecting) dessus.add(e.target); else dessus.delete(e.target);
+        });
+        majBarre();
+      });
+      if (heros) io.observe(heros);
+      $$("form, .prenoms, .matieres__rail, .pied").forEach((el) => io.observe(el));
+    }
+  }
+
   const nm = $(".nav-matieres");
   if (nm) {
     const b = $("button", nm);
